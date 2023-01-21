@@ -2,12 +2,7 @@ try :
     from flask import Flask, render_template, request, flash
     from flask_mysqldb import MySQL
     import re
-    import os
-    from werkzeug.utils import secure_filename
     app = Flask(__name__)
-    UPLOAD_FOLDER = 'static/uploads/'
-    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-    ALLOWED_EXTENSIONS = {'pdf', 'jpg', 'jpeg'}
     app.secret_key = "secret key"
     app.config['MYSQL_HOST'] = 'localhost'
     app.config['MYSQL_USER'] = 'root'
@@ -22,12 +17,6 @@ try :
             email = details['email']
             phone = details['phone']
             dob = details['dateofbirth']
-            file = request.files['image_file']
-            if file:
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename)))
-            else:
-                raise FileNotFoundError("File not found")
-            profile_picture = convertToBinaryData()
             regex_email = r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)'
             if re.fullmatch(regex_email, email):
                 flag = 1
@@ -39,17 +28,14 @@ try :
             else:
                 raise ValueError("Invalid phone number")
             cur = mysql.connection.cursor()
-            cur.execute("INSERT INTO storage(name, email, phone, dob, profile_picture) VALUES (%s, %s, %s,%s,%s)", (name, email, phone, dob,profile_picture))
+            cur.execute("INSERT INTO storage(name, email, phone, dob) VALUES (%s, %s, %s,%s)", (name, email, phone, dob))
             mysql.connection.commit()
             cur.execute("select * from storage")
             data = cur.fetchall()
             cur.close()
             return render_template("template.html", data=data)
         return render_template('index.html')
-    def convertToBinaryData(filename):
-        with open(filename, 'rb') as file:
-            binaryData = file.read()
-        return binaryData
+
     @app.route('/delete/<string:id>')
     def delete(id):
         cur = mysql.connection.cursor()
