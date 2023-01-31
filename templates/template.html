@@ -6,6 +6,9 @@ table, th, td {
 }
 </style>
 <center>
+    <a href="/formpage">
+            <button> Add Student </button>
+        </a>
 <table>
     <tr>
     <th> Name </th>
@@ -13,24 +16,27 @@ table, th, td {
     <th> Phone no </th>
     <th>  DOB </th>
         <th> Action </th>
+        <th> Image </th>
     </tr>
-{% for item in data %}
+    {% for i in range(length_of_data) %}
 <tr>
-<td> {{item[0]}} </td>
-    <td> {{item[1]}} </td>
-    <td> {{item[2]}} </td>
-    <td> {{item[3]}} </td>
+    <td> {{data[i][0]}} </td>
+    <td> {{data[i][1]}} </td>
+    <td> {{data[i][2]}} </td>
+    <td> {{data[i][3]}} </td>
     <td>
-        <a href="/delete/{{item[4]}}">
+        <a href="/delete/{{data[i][4]}}">
             <button> Delete </button>
         </a>
-        <a href="/update/{{item[4]}}">
+        <a href="/update/{{data[i][4]}}">
             <button> Update </button>
         </a>
-
+    </td>
+    <td>
+        <img src="data:;base64,{{l[i]}}"  alt="No image to show"/>
     </td>
 </tr>
-{% endfor %}
+        {% endfor %}
 </table>
 </center>
 </BODY>

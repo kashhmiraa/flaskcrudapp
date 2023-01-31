@@ -1,9 +1,10 @@
+from base64 import b64encode
+from flask import Flask, render_template, request, flash
+from flask_mysqldb import MySQL
+import re
+import os
+from werkzeug.utils import secure_filename
 try :
-    from flask import Flask, render_template, request, flash
-    from flask_mysqldb import MySQL
-    import re
-    import os
-    from werkzeug.utils import secure_filename
     app = Flask(__name__)
     UPLOAD_FOLDER = 'static/uploads/'
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -15,6 +16,13 @@ try :
     app.config['MYSQL_DB'] = 'mydb'
     mysql = MySQL(app)
     @app.route('/', methods=['GET', 'POST'])
+    def view():
+        cur = mysql.connection.cursor()
+        cur.execute("select * from storage")
+        data = cur.fetchall()
+        cur.close()
+        return render_template("view.html", data=data)
+    @app.route('/formpage', methods=['GET','POST'])
     def index():
         if request.method == "POST":
             details = request.form
@@ -24,28 +32,63 @@ try :
             dob = details['dateofbirth']
             file = request.files['image_file']
             if file:
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename)))
+               file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename)))
             else:
                 raise FileNotFoundError("File not found")
-            profile_picture = convertToBinaryData()
-            regex_email = r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)'
-            if re.fullmatch(regex_email, email):
-                flag = 1
-            else:
-                raise ValueError("Invalid email format")
-            regex_phone = r'(^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$)'
-            if re.fullmatch(regex_phone, phone):
-                flag = 1
-            else:
-                raise ValueError("Invalid phone number")
+            file_name = secure_filename(file.filename)
+            profile_picture = convertToBinaryData('C:/Users/Kashmira Raghuwanshi/OneDrive/Desktop/flaskform/static/uploads/' + file_name)
             cur = mysql.connection.cursor()
-            cur.execute("INSERT INTO storage(name, email, phone, dob, profile_picture) VALUES (%s, %s, %s,%s,%s)", (name, email, phone, dob,profile_picture))
+            #try:
+            #    check_email(email)  dob) VALUES (%s, %s, %s,%s)", (name, email, phone, dob, profile_picture))
+            #except:
+            #    return ("This email is of another user")  #    #try:
+            #    check_phone(phone)
+            #except:
+            #    return ("This phone number is of another user")
+            cur.execute("INSERT INTO storage(name, email, phone, dob, profile_picture) VALUES (%s, %s, %s,%s,%s)",  (name, email, phone, dob, profile_picture))
             mysql.connection.commit()
             cur.execute("select * from storage")
             data = cur.fetchall()
+            length_of_data = len(data)
+            #print(data)
             cur.close()
-            return render_template("template.html", data=data)
+            #profile_picture=convertToBinaryData(data[112][5])
+            l = []
+            for i in range(len(data)):
+                if data[i][5] is None:
+                    l.append('no_image')
+                else:
+                    image = b64encode(data[i][5]).decode("utf-8")
+                    l.append(image)
+            return render_template("template.html", data=data, l=l, i=i, length_of_data=length_of_data)
         return render_template('index.html')
+
+    #def check_email(email):
+    #    regex_email = r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)'
+    #    if re.fullmatch(regex_email, email):
+    #        flag = 1
+    #    else:
+    #        raise ValueError("Invalid email format")
+    #    cur = mysql.connection.cursor()
+    #    cur.execute("select id from storage where email=%s", [email])
+    #    data = cur.fetchone()
+    #    cur.close()
+    #    if data:
+    #        msg = "Email already exists"
+    #        raise ValueError(msg)
+    #def check_phone(phone):
+    #    regex_phone = r'(^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$)'
+    #    if re.fullmatch(regex_phone, phone):
+    #        flag = 1
+    #    else:
+    #        raise ValueError("Invalid phone number")
+    #    cur = mysql.connection.cursor()
+    #    cur.execute("select id from storage where phone=%s", [phone])
+    #    data = cur.fetchone()
+    #    cur.close()
+    #    if data:
+    #        msg = "Phone number already exists"
+    #        raise ValueError(msg)
     def convertToBinaryData(filename):
         with open(filename, 'rb') as file:
             binaryData = file.read()
@@ -78,5 +121,8 @@ try :
             return 'UPDATED SUCCESSFULLY'
 except OSError:
     print("Operating System Error")
+except ValueError:
+    print("This email already being used")
 if __name__ == '__main__':
     app.run(debug=True)
+
