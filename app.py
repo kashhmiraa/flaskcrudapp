@@ -1,5 +1,5 @@
 from base64 import b64encode
-from flask import Flask, render_template, request, flash
+from flask import Flask, render_template, request, flash, url_for , redirect
 from flask_mysqldb import MySQL
 import re
 import os
@@ -20,8 +20,16 @@ try :
         cur = mysql.connection.cursor()
         cur.execute("select * from storage")
         data = cur.fetchall()
+        length_of_data = len(data)
         cur.close()
-        return render_template("view.html", data=data)
+        l = []
+        for i in range(len(data)):
+            if data[i][5] is None:
+                l.append('no_image')
+            else:
+                image = b64encode(data[i][5]).decode("utf-8")
+                l.append(image)
+        return render_template("template.html", data=data, l=l, i=i, length_of_data=length_of_data)
     @app.route('/formpage', methods=['GET','POST'])
     def index():
         if request.method == "POST":
@@ -47,20 +55,21 @@ try :
             #    return ("This phone number is of another user")
             cur.execute("INSERT INTO storage(name, email, phone, dob, profile_picture) VALUES (%s, %s, %s,%s,%s)",  (name, email, phone, dob, profile_picture))
             mysql.connection.commit()
-            cur.execute("select * from storage")
-            data = cur.fetchall()
-            length_of_data = len(data)
-            #print(data)
-            cur.close()
-            #profile_picture=convertToBinaryData(data[112][5])
-            l = []
-            for i in range(len(data)):
-                if data[i][5] is None:
-                    l.append('no_image')
-                else:
-                    image = b64encode(data[i][5]).decode("utf-8")
-                    l.append(image)
-            return render_template("template.html", data=data, l=l, i=i, length_of_data=length_of_data)
+            # cur.execute("select * from storage")
+            # data = cur.fetchall()
+            # length_of_data = len(data)
+            # #print(data)
+            # cur.close()
+            # #profile_picture=convertToBinaryData(data[112][5])
+            # l = []
+            # for i in range(len(data)):
+            #     if data[i][5] is None:
+            #         l.append('no_image')
+            #     else:
+            #         image = b64encode(data[i][5]).decode("utf-8")
+            #         l.append(image)
+            msg = "The form is submitted successfully"
+            return render_template('index.html', msg=msg)
         return render_template('index.html')
 
     #def check_email(email):
@@ -126,3 +135,4 @@ except ValueError:
 if __name__ == '__main__':
     app.run(debug=True)
 
+#
