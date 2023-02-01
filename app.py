@@ -139,8 +139,11 @@ try :
             return 'UPDATED SUCCESSFULLY'
 except OSError:
     print("Operating System Error")
-except ValueError:
-    print("This email already being used")
+except KeyError:
+    print("Key can't be accessed")
+except MemoryError:
+    print("Memory limit exceeded")
+
 if __name__ == '__main__':
     app.run(debug=True)
 
