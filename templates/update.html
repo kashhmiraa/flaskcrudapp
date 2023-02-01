@@ -1,13 +1,13 @@
 <HTML>
 <BODY bgcolor="cyan">
-<form method="post" action="/updatedata" >
+<form method="post" action="/updatedata" enctype="multipart/form-data" >
     <center>
     <H1>Enter your details </H1> <br>
     Name <input type = "text" name="name" value="{{data[0][0]}}" /> <br> <br>
     Emailid <input type = "text"  name="email" value = "{{data[0][1]}}" /> <br> <br>
         Phoneno <input type="text" name="phone" value="{{data[0][2]}}" /> <br> <br>
-        DOB <input type="text" name="dateofbirth" value="{{data[0][3]}}"/>
-         <input type = "hidden" name="id" value="{{data[0][4]}}" /> <br> <br>
+        Upload image <input type="file" name="image_file" value="Submit">
+         <input type = "hidden" name="id" value="{{data[0][3]}}" /> <br> <br>
    <input type="submit" value="Update Data"/>
     </center>
 </form>

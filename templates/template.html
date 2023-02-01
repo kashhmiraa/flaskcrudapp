@@ -14,7 +14,6 @@ table, th, td {
     <th> Name </th>
     <th> Email id </th>
     <th> Phone no </th>
-    <th>  DOB </th>
         <th> Action </th>
         <th> Image </th>
     </tr>
@@ -23,12 +22,11 @@ table, th, td {
     <td> {{data[i][0]}} </td>
     <td> {{data[i][1]}} </td>
     <td> {{data[i][2]}} </td>
-    <td> {{data[i][3]}} </td>
     <td>
-        <a href="/delete/{{data[i][4]}}">
+        <a href="/delete/{{data[i][3]}}">
             <button> Delete </button>
         </a>
-        <a href="/update/{{data[i][4]}}">
+        <a href="/update/{{data[i][3]}}">
             <button> Update </button>
         </a>
     </td>

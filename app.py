@@ -15,6 +15,46 @@ try :
     app.config['MYSQL_PASSWORD'] = 'Ihatemaths#02'
     app.config['MYSQL_DB'] = 'mydb'
     mysql = MySQL(app)
+    def check_email(email):
+        try:
+           regex_email = r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)'
+           if re.fullmatch(regex_email, email)==None:
+               raise ValueError
+        except ValueError:
+            msg = 'The email has an invalid format'
+            return msg
+        try:
+           cur = mysql.connection.cursor()
+           cur.execute("select id from storage where email=%s", [email])
+           data = cur.fetchone()
+           cur.close()
+           if data:
+               raise ValueError
+        except ValueError:
+            msg = 'Email already exists'
+            return msg
+    def check_phone(phone):
+        try:
+            regex_phone = r'(^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$)'
+            if re.fullmatch(regex_phone, phone)==None:
+                raise ValueError
+        except ValueError:
+            msg = 'The phone no has an invalid format'
+            return msg
+        try:
+           cur = mysql.connection.cursor()
+           cur.execute("select id from storage where phone=%s", [phone])
+           data = cur.fetchone()
+           cur.close()
+           if data:
+                raise ValueError
+        except ValueError:
+           msg = 'Phone no already exists'
+           return msg
+    def convertToBinaryData(filename):
+        with open(filename, 'rb') as file:
+            binaryData = file.read()
+        return binaryData
     @app.route('/', methods=['GET', 'POST'])
     def view():
         cur = mysql.connection.cursor()
@@ -24,10 +64,10 @@ try :
         cur.close()
         l = []
         for i in range(len(data)):
-            if data[i][5] is None:
+            if data[i][4] is None:
                 l.append('no_image')
             else:
-                image = b64encode(data[i][5]).decode("utf-8")
+                image = b64encode(data[i][4]).decode("utf-8")
                 l.append(image)
         return render_template("template.html", data=data, l=l, i=i, length_of_data=length_of_data)
     @app.route('/formpage', methods=['GET','POST'])
@@ -37,71 +77,21 @@ try :
             name = details['name']
             email = details['email']
             phone = details['phone']
-            dob = details['dateofbirth']
             file = request.files['image_file']
             if file:
                file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename)))
-            else:
-                raise FileNotFoundError("File not found")
             file_name = secure_filename(file.filename)
             profile_picture = convertToBinaryData('C:/Users/Kashmira Raghuwanshi/OneDrive/Desktop/flaskform/static/uploads/' + file_name)
+            if check_email(email):
+                return check_email(email)
+            if check_phone(phone):
+                return check_phone(phone)
             cur = mysql.connection.cursor()
-            #try:
-            #    check_email(email)  dob) VALUES (%s, %s, %s,%s)", (name, email, phone, dob, profile_picture))
-            #except:
-            #    return ("This email is of another user")  #    #try:
-            #    check_phone(phone)
-            #except:
-            #    return ("This phone number is of another user")
-            cur.execute("INSERT INTO storage(name, email, phone, dob, profile_picture) VALUES (%s, %s, %s,%s,%s)",  (name, email, phone, dob, profile_picture))
+            cur.execute("INSERT INTO storage(name, email, phone,profile_picture) VALUES (%s, %s, %s,%s)",  (name, email, phone, profile_picture))
             mysql.connection.commit()
-            # cur.execute("select * from storage")
-            # data = cur.fetchall()
-            # length_of_data = len(data)
-            # #print(data)
-            # cur.close()
-            # #profile_picture=convertToBinaryData(data[112][5])
-            # l = []
-            # for i in range(len(data)):
-            #     if data[i][5] is None:
-            #         l.append('no_image')
-            #     else:
-            #         image = b64encode(data[i][5]).decode("utf-8")
-            #         l.append(image)
             msg = "The form is submitted successfully"
             return render_template('index.html', msg=msg)
         return render_template('index.html')
-
-    #def check_email(email):
-    #    regex_email = r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)'
-    #    if re.fullmatch(regex_email, email):
-    #        flag = 1
-    #    else:
-    #        raise ValueError("Invalid email format")
-    #    cur = mysql.connection.cursor()
-    #    cur.execute("select id from storage where email=%s", [email])
-    #    data = cur.fetchone()
-    #    cur.close()
-    #    if data:
-    #        msg = "Email already exists"
-    #        raise ValueError(msg)
-    #def check_phone(phone):
-    #    regex_phone = r'(^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$)'
-    #    if re.fullmatch(regex_phone, phone):
-    #        flag = 1
-    #    else:
-    #        raise ValueError("Invalid phone number")
-    #    cur = mysql.connection.cursor()
-    #    cur.execute("select id from storage where phone=%s", [phone])
-    #    data = cur.fetchone()
-    #    cur.close()
-    #    if data:
-    #        msg = "Phone number already exists"
-    #        raise ValueError(msg)
-    def convertToBinaryData(filename):
-        with open(filename, 'rb') as file:
-            binaryData = file.read()
-        return binaryData
     @app.route('/delete/<string:id>')
     def delete(id):
         cur = mysql.connection.cursor()
@@ -122,10 +112,18 @@ try :
             name = details['name']
             email = details['email']
             phone = details['phone']
-            dob = details['dateofbirth']
+            file = request.files['image_file']
+            if file:
+               file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename)))
+            file_name = secure_filename(file.filename)
+            profile_picture = convertToBinaryData('C:/Users/Kashmira Raghuwanshi/OneDrive/Desktop/flaskform/static/uploads/' + file_name)
             id_data=details['id']
+            if check_email(email):
+                return check_email(email)
+            if check_phone(phone):
+                return check_phone(phone)
             cur = mysql.connection.cursor()
-            cur.execute("UPDATE storage set name=%s,email=%s,phone=%s,dob=%s where id=%s",(name,email,phone,dob,id_data))
+            cur.execute("UPDATE storage set name=%s,email=%s,phone=%s,profile_picture=%s where id=%s",(name, email, phone, profile_picture, id_data))
             mysql.connection.commit()
             return 'UPDATED SUCCESSFULLY'
 except OSError:
@@ -135,4 +133,3 @@ except ValueError:
 if __name__ == '__main__':
     app.run(debug=True)
 
-#
