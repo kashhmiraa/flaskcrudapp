@@ -17,6 +17,11 @@ try :
     mysql = MySQL(app)
     def check_email(email):
         try:
+            if email==None:
+                raise Exception
+        except Exception:
+            return 'Enter an email'
+        try:
            regex_email = r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)'
            if re.fullmatch(regex_email, email)==None:
                raise ValueError
@@ -51,6 +56,10 @@ try :
         except ValueError:
            msg = 'Phone no already exists'
            return msg
+    def check_image(profile_picture):
+        image_length = bytes(len(profile_picture.encode('utf-8')))
+        if image_length > 65000:
+            raise Exception("Image size limit exceeded")
     def convertToBinaryData(filename):
         with open(filename, 'rb') as file:
             binaryData = file.read()
@@ -86,6 +95,8 @@ try :
                 return check_email(email)
             if check_phone(phone):
                 return check_phone(phone)
+            if check_image(profile_picture):
+                return check_image(profile_picture)
             cur = mysql.connection.cursor()
             cur.execute("INSERT INTO storage(name, email, phone,profile_picture) VALUES (%s, %s, %s,%s)",  (name, email, phone, profile_picture))
             mysql.connection.commit()
